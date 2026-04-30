@@ -1,4 +1,4 @@
-# Project Proposal: Sistem za detekciju nesklada između CV-a i stvarnog znanja kandidata
+# Project Proposal: Sistem za detekciju razlike između CV-a i stvarnog znanja kandidata
 
 Vuk Vićentić, SV45/2022
 
