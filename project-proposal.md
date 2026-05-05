@@ -84,6 +84,108 @@ Baza znanja sastoji se iz tri komponente:
 - Mapiranje nivoa ekspertize → koncepti dobija se iz literature (npr. roadmap.sh, službene dokumentacije, industrijskih standarda)
 - Pravila se pišu u Drools-u i mogu se proširivati kako se otkrivaju novi tipovi nesklada
 
+#### Pravila u sistemu (forward-chaining sa 4 nivoa)
+
+Pravila su organizovana u **4 nivoa ulančavanja**, gde svaki nivo proizvodi činjenice koje aktiviraju pravila narednog nivoa.
+
+##### Nivo 1 — Određivanje očekivanog znanja
+
+Ova pravila ne zavise od drugih pravila i pokreću se nad ulaznim činjenicama (CV podaci + intervju podaci).
+
+- **`R1.1 — DetermineExpectedConcepts`**
+  *Ako u CV-u postoji tehnologija sa tvrđenim nivoom `level`, onda kreiraj činjenicu `ExpectedConcepts(technology, level, conceptList)` gde je `conceptList` skup svih koncepata koji se očekuju za taj nivo.*
+
+- **`R1.2 — DetermineExpectedLevelFromExperience`**
+  *Ako kandidat ima X godina iskustva sa tehnologijom, kreiraj činjenicu `ExperienceBasedLevel(technology, level)` na osnovu mapiranja godine → nivo.*
+
+- **`R1.3 — CollectDemonstratedConcepts`** *(koristi accumulate)*
+  *Za svaku tehnologiju, prikupi sve koncepte koje je kandidat spomenuo tokom intervjua iz svih pitanja koja se odnose na tu tehnologiju.*
+  ```
+  accumulate( $c: ConceptMentioned(technology == $tech),
+              $concepts: collectList($c.concept) )
+  → kreira DemonstratedConcepts(technology, conceptList)
+  ```
+
+##### Nivo 2 — Analiza znanja po tehnologiji
+
+Pravila ovog nivoa rade nad činjenicama koje su kreirana pravila Nivoa 1.
+
+- **`R2.1 — ComputeMissingConcepts`**
+  *Ako postoje `ExpectedConcepts` i `DemonstratedConcepts` za istu tehnologiju, izračunaj `MissingConcepts(technology, missingList)` kao razliku skupova.*
+
+- **`R2.2 — ComputeUnexpectedlyKnownConcepts`**
+  *Ako je kandidat demonstrirao koncepte koji nisu očekivani za njegov tvrđeni nivo, kreiraj `BonusConcepts(technology, bonusList)`.*
+
+- **`R2.3 — EstimateActualLevel`** *(koristi accumulate)*
+  *Procenjuje stvarni nivo kandidata za tehnologiju na osnovu broja demonstriranih koncepata i njihove težine.*
+  ```
+  accumulate( $c: ConceptMentioned(technology == $tech),
+              $score: sum($c.difficultyWeight) )
+  → kreira EstimatedLevel(technology, level)
+  ```
+
+- **`R2.4 — ComputeAverageQuestionScore`** *(koristi accumulate)*
+  *Računa prosečnu ocenu odgovora po tehnologiji iz svih pitanja vezanih za tu tehnologiju.*
+  ```
+  accumulate( $q: QuestionScore(technology == $tech),
+              $avg: average($q.score) )
+  → kreira AverageScore(technology, avgScore)
+  ```
+
+##### Nivo 3 — Detekcija nesklada (Gap-ova)
+
+Pravila ovog nivoa rade nad činjenicama iz Nivoa 2.
+
+- **`R3.1 — DetectOverstatement_Major`**
+  *Ako je `MissingConcepts.size / ExpectedConcepts.size > 0.5`, kreiraj `Gap(technology, type=OVERSTATED, severity=MAJOR)`.*
+
+- **`R3.2 — DetectOverstatement_Critical`**
+  *Ako `MissingConcepts.size / ExpectedConcepts.size > 0.75` I `AverageScore < 40`, kreiraj `Gap(technology, type=OVERSTATED, severity=CRITICAL)`.*
+
+- **`R3.3 — DetectOverstatement_Moderate`**
+  *Ako je `MissingConcepts.size / ExpectedConcepts.size` između 0.3 i 0.5, kreiraj `Gap(technology, type=OVERSTATED, severity=MODERATE)`.*
+
+- **`R3.4 — DetectUnderstatement`**
+  *Ako je `EstimatedLevel > ClaimedLevel`, kreiraj `Gap(technology, type=UNDERSTATED, severity=MINOR)`.*
+
+- **`R3.5 — DetectMatch`**
+  *Ako je `MissingConcepts.size / ExpectedConcepts.size < 0.2` I `AverageScore > 70`, kreiraj `Gap(technology, type=MATCHED, severity=NONE)`.*
+
+##### Nivo 4 — Sumarna procena i preporuke
+
+Pravila ovog nivoa rade nad Gap činjenicama iz Nivoa 3.
+
+- **`R4.1 — CountSeriousGaps`** *(koristi accumulate)*
+  *Broji koliko ima Gap-ova tipa OVERSTATED sa severity-jem MAJOR ili CRITICAL.*
+  ```
+  accumulate( $g: Gap(type == OVERSTATED, severity in (MAJOR, CRITICAL)),
+              $count: count($g) )
+  → kreira SeriousGapCount(count)
+  ```
+
+- **`R4.2 — CollectProblematicTechnologies`** *(koristi accumulate)*
+  *Prikuplja listu svih tehnologija koje imaju MAJOR ili CRITICAL gap.*
+  ```
+  accumulate( $g: Gap(severity in (MAJOR, CRITICAL)),
+              $techs: collectList($g.technology) )
+  → kreira ProblematicTechnologies(techList)
+  ```
+
+- **`R4.3 — ClassifyAsUnreliableCV`**
+  *Ako je `SeriousGapCount >= 3`, klasifikuj kao `UNRELIABLE_CV`.*
+
+- **`R4.4 — ClassifyAsSignificantGaps`**
+  *Ako je `SeriousGapCount` između 1 i 2, klasifikuj kao `SIGNIFICANT_GAPS`.*
+
+- **`R4.5 — ClassifyAsMinorInconsistencies`**
+  *Ako nema OVERSTATED MAJOR/CRITICAL, ali ima MODERATE gap-ova ili UNDERSTATED gap-ova, klasifikuj kao `MINOR_INCONSISTENCIES`.*
+
+- **`R4.6 — ClassifyAsReliableCV`**
+  *Ako su sve tehnologije MATCHED ili imaju samo MINOR gap-ove, klasifikuj kao `RELIABLE_CV`.*
+
+- **`R4.7 — GenerateMentorRecommendation`**
+  *Ako klasifikacija nije `RELIABLE_CV`, generiši preporuku mentoru sa listom problematičnih tehnologija (iz `ProblematicTechnologies`) i konkretnim konceptima koje treba dodatno proveriti.*
+
 #### Konkretan primer rezonovanja (korak po korak)
 
 Pretpostavimo sledeći ulaz:
@@ -97,35 +199,35 @@ Pretpostavimo sledeći ulaz:
 - Pitanja o React-u: kandidat **nije** pomenuo `useEffect`, `context`, `memoization`, `reconciliation`, `custom hooks`
 - Pitanja o PostgreSQL-u: kandidat je spomenuo `JOIN`, `SELECT`, `INDEX`, `EXPLAIN`, `transactions`, `ACID`
 
-**Korak 1 — Aktivira se pravilo `DetermineExpectedConcepts`:**
-> *Ako je tvrđeni nivo za tehnologiju = ekspert, onda su očekivani koncepti = svi koncepti za tu tehnologiju (osnovni + napredni + ekspertski).*
+**Korak 1 [Nivo 1] — `R1.1 DetermineExpectedConcepts`:**
+Za React (ekspert) → kreira se `ExpectedConcepts(React, [JSX, useState, props, components, useEffect, context, hooks lifecycle, memoization, reconciliation, custom hooks, performance optimization])`.
 
-Sistem zaključuje da se za React (ekspert) očekuju koncepti: `JSX, useState, props, components, useEffect, context, hooks lifecycle, memoization, reconciliation, custom hooks, performance optimization`.
+**Korak 2 [Nivo 1] — `R1.3 CollectDemonstratedConcepts` (accumulate):**
+Sistem prikuplja sve koncepte koje je kandidat pomenuo za React → kreira `DemonstratedConcepts(React, [JSX, useState, props, components])`.
 
-**Korak 2 — Aktivira se pravilo `ComputeMissingConcepts`:**
-> *Ako postoji tehnologija sa očekivanim konceptima i listom demonstriranih koncepata, izračunaj listu nedostajućih koncepata.*
+**Korak 3 [Nivo 2] — `R2.1 ComputeMissingConcepts`:**
+Sistem računa razliku skupova → kreira `MissingConcepts(React, [useEffect, context, memoization, reconciliation, custom hooks, performance optimization])` (6 od 11).
 
-Sistem računa: nedostaju `useEffect, context, memoization, reconciliation, custom hooks, performance optimization` (6 od 11 očekivanih).
+**Korak 4 [Nivo 2] — `R2.4 ComputeAverageQuestionScore` (accumulate):**
+Sistem računa prosečnu ocenu odgovora za React pitanja → kreira `AverageScore(React, 35)`.
 
-**Korak 3 — Aktivira se pravilo `DetectOverstatement`:**
-> *Ako broj nedostajućih koncepata / broj očekivanih koncepata > 0.5, onda postoji nesklad tipa OVERSTATED sa stepenom MAJOR.*
+**Korak 5 [Nivo 3] — `R3.1 DetectOverstatement_Major`:**
+6/11 = 0.54 > 0.5 → kreira `Gap(React, OVERSTATED, MAJOR)`.
 
-Sistem kreira novu činjenicu: `Gap(technology=React, type=OVERSTATED, severity=MAJOR)`.
+**Korak 6 [Nivo 3] — `R3.4 DetectUnderstatement`:**
+Za PostgreSQL: kandidat je tvrdio srednji nivo, ali je pokazao senior koncepte → kreira `Gap(PostgreSQL, UNDERSTATED, MINOR)`.
 
-**Korak 4 — Aktivira se pravilo `DetectUnderstatement`:**
-> *Ako je tvrđeni nivo srednji a kandidat je demonstrirao koncepte koji odgovaraju seniorskom nivou, onda postoji nesklad tipa UNDERSTATED.*
+**Korak 7 [Nivo 4] — `R4.1 CountSeriousGaps` (accumulate):**
+Broji Gap-ove sa MAJOR/CRITICAL severity-jem → kreira `SeriousGapCount(1)`.
 
-Za PostgreSQL: kandidat je tvrdio srednji nivo, ali je pokazao poznavanje `EXPLAIN` i `ACID` što su senior koncepti. Sistem kreira: `Gap(technology=PostgreSQL, type=UNDERSTATED, severity=MINOR)`.
+**Korak 8 [Nivo 4] — `R4.2 CollectProblematicTechnologies` (accumulate):**
+Prikuplja sve problematične tehnologije → kreira `ProblematicTechnologies([React])`.
 
-**Korak 5 — Aktivira se pravilo `GenerateOverallAssessment`:**
-> *Ako postoji bar jedan gap tipa OVERSTATED sa severity-jem MAJOR ili CRITICAL, klasifikuj kandidata kao SIGNIFICANT_GAPS.*
+**Korak 9 [Nivo 4] — `R4.4 ClassifyAsSignificantGaps`:**
+SeriousGapCount = 1 → kreira `OverallAssessment(SIGNIFICANT_GAPS)`.
 
-Sistem kreira sumarni izveštaj: `OverallAssessment(classification=SIGNIFICANT_GAPS)`.
-
-**Korak 6 — Aktivira se pravilo `GenerateMentorRecommendation`:**
-> *Ako je kandidat klasifikovan kao SIGNIFICANT_GAPS, generiši preporuku za dodatna pitanja iz tehnologija sa MAJOR gap-om.*
-
-Sistem generiše: *„Preporuka mentoru: Postaviti dodatna pitanja iz oblasti React-a, posebno o useEffect, context API i optimizaciji performansi."*
+**Korak 10 [Nivo 4] — `R4.7 GenerateMentorRecommendation`:**
+Generiše preporuku za React sa listom konkretnih nedostajućih koncepata.
 
 **Finalni izlaz:**
 - Gap Report za React: OVERSTATED, MAJOR, nedostaju 6 ključnih koncepata
