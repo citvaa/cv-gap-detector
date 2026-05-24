@@ -1,0 +1,96 @@
+package rules;
+
+import com.ftn.sbnz.model.cv.CVTechnology;
+import com.ftn.sbnz.model.cv.ExpertiseLevel;
+import com.ftn.sbnz.model.facts.MissingConcepts;
+import com.ftn.sbnz.model.facts.BonusConcepts;
+import com.ftn.sbnz.model.facts.EstimatedLevel;
+import com.ftn.sbnz.model.facts.AverageScore;
+import com.ftn.sbnz.model.facts.Gap;
+import com.ftn.sbnz.model.facts.GapType;
+import com.ftn.sbnz.model.facts.GapSeverity;
+
+import java.util.HashSet;
+
+rule "R3.2 DetectOverstatement_Critical"
+    salience 65
+    when
+        $mc: MissingConcepts($cId: candidateId, $tech: technology, missingRatio > 0.75)
+        $avg: AverageScore(candidateId == $cId, technology == $tech, avgScore < 40)
+        $cv: CVTechnology(candidateId == $cId, technology == $tech, $claimed: claimedLevel)
+        $est: EstimatedLevel(candidateId == $cId, technology == $tech, $estLvl: level)
+        not Gap(candidateId == $cId, technology == $tech)
+    then
+        Gap g = new Gap($cId, $tech, GapType.OVERSTATED, GapSeverity.CRITICAL);
+        g.setClaimedLevel($claimed);
+        g.setEstimatedLevel($estLvl);
+        g.setMissingConcepts(new HashSet<String>($mc.getMissingList()));
+        insert(g);
+        System.out.println("[R3.2] Kreirano: " + g);
+end
+
+rule "R3.1 DetectOverstatement_Major"
+    salience 60
+    when
+        $mc: MissingConcepts($cId: candidateId, $tech: technology, missingRatio > 0.5)
+        $cv: CVTechnology(candidateId == $cId, technology == $tech, $claimed: claimedLevel)
+        $est: EstimatedLevel(candidateId == $cId, technology == $tech, $estLvl: level)
+        not Gap(candidateId == $cId, technology == $tech)
+    then
+        Gap g = new Gap($cId, $tech, GapType.OVERSTATED, GapSeverity.MAJOR);
+        g.setClaimedLevel($claimed);
+        g.setEstimatedLevel($estLvl);
+        g.setMissingConcepts(new HashSet<String>($mc.getMissingList()));
+        insert(g);
+        System.out.println("[R3.1] Kreirano: " + g);
+end
+
+rule "R3.3 DetectOverstatement_Moderate"
+    salience 55
+    when
+        $mc: MissingConcepts($cId: candidateId, $tech: technology, missingRatio >= 0.3, missingRatio <= 0.5)
+        $cv: CVTechnology(candidateId == $cId, technology == $tech, $claimed: claimedLevel)
+        $est: EstimatedLevel(candidateId == $cId, technology == $tech, $estLvl: level)
+        not Gap(candidateId == $cId, technology == $tech)
+    then
+        Gap g = new Gap($cId, $tech, GapType.OVERSTATED, GapSeverity.MODERATE);
+        g.setClaimedLevel($claimed);
+        g.setEstimatedLevel($estLvl);
+        g.setMissingConcepts(new HashSet<String>($mc.getMissingList()));
+        insert(g);
+        System.out.println("[R3.3] Kreirano: " + g);
+end
+
+rule "R3.4 DetectUnderstatement"
+    salience 50
+    when
+        $est: EstimatedLevel($cId: candidateId, $tech: technology, $estLvl: level)
+        $cv: CVTechnology(candidateId == $cId, technology == $tech, $claimed: claimedLevel)
+        eval($estLvl.getRank() > $claimed.getRank())
+        $bonus: BonusConcepts(candidateId == $cId, technology == $tech)
+        not Gap(candidateId == $cId, technology == $tech)
+    then
+        Gap g = new Gap($cId, $tech, GapType.UNDERSTATED, GapSeverity.MINOR);
+        g.setClaimedLevel($claimed);
+        g.setEstimatedLevel($estLvl);
+        g.setBonusConcepts(new HashSet<String>($bonus.getBonusList()));
+        insert(g);
+        System.out.println("[R3.4] Kreirano: " + g);
+end
+
+rule "R3.5 DetectMatch"
+    salience 45
+    when
+        $mc: MissingConcepts($cId: candidateId, $tech: technology, missingRatio < 0.2)
+        $avg: AverageScore(candidateId == $cId, technology == $tech, avgScore > 70)
+        $cv: CVTechnology(candidateId == $cId, technology == $tech, $claimed: claimedLevel)
+        $est: EstimatedLevel(candidateId == $cId, technology == $tech, $estLvl: level)
+        eval($estLvl == $claimed)
+        not Gap(candidateId == $cId, technology == $tech)
+    then
+        Gap g = new Gap($cId, $tech, GapType.MATCHED, GapSeverity.NONE);
+        g.setClaimedLevel($claimed);
+        g.setEstimatedLevel($estLvl);
+        insert(g);
+        System.out.println("[R3.5] Kreirano: " + g);
+end

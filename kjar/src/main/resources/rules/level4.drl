@@ -1,0 +1,124 @@
+package rules;
+
+import com.ftn.sbnz.model.facts.Gap;
+import com.ftn.sbnz.model.facts.GapType;
+import com.ftn.sbnz.model.facts.GapSeverity;
+import com.ftn.sbnz.model.facts.SeriousGapCount;
+import com.ftn.sbnz.model.facts.ProblematicTechnologies;
+import com.ftn.sbnz.model.facts.OverallAssessment;
+import com.ftn.sbnz.model.facts.OverallClassification;
+import com.ftn.sbnz.model.facts.MentorRecommendation;
+import com.ftn.sbnz.model.cv.CVTechnology;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+rule "R4.1 CountSeriousGaps"
+    salience 40
+    when
+        $cv: CVTechnology($cId: candidateId)
+        $count: Number() from accumulate(
+            Gap(candidateId == $cId, type == GapType.OVERSTATED,
+                severity in (GapSeverity.MAJOR, GapSeverity.CRITICAL)),
+            count(1)
+        )
+        not SeriousGapCount(candidateId == $cId)
+    then
+        SeriousGapCount sgc = new SeriousGapCount($cId, $count.intValue());
+        insert(sgc);
+        System.out.println("[R4.1] Kreirano: " + sgc);
+end
+
+rule "R4.2 CollectProblematicTechnologies"
+    salience 40
+    when
+        $cv: CVTechnology($cId: candidateId)
+        $techs: List() from accumulate(
+            Gap(candidateId == $cId, severity in (GapSeverity.MAJOR, GapSeverity.CRITICAL), $t: technology),
+            collectList($t)
+        )
+        not ProblematicTechnologies(candidateId == $cId)
+    then
+        ProblematicTechnologies pt = new ProblematicTechnologies($cId, new ArrayList<String>($techs));
+        insert(pt);
+        System.out.println("[R4.2] Kreirano: " + pt);
+end
+
+rule "R4.3 ClassifyAsUnreliableCV"
+    salience 35
+    when
+        $sgc: SeriousGapCount($cId: candidateId, count >= 3)
+        not OverallAssessment(candidateId == $cId)
+    then
+        OverallAssessment oa = new OverallAssessment($cId, OverallClassification.UNRELIABLE_CV);
+        insert(oa);
+        System.out.println("[R4.3] Kreirano: " + oa);
+end
+
+rule "R4.4 ClassifyAsSignificantGaps"
+    salience 30
+    when
+        $sgc: SeriousGapCount($cId: candidateId, count >= 1, count <= 2)
+        not OverallAssessment(candidateId == $cId)
+    then
+        OverallAssessment oa = new OverallAssessment($cId, OverallClassification.SIGNIFICANT_GAPS);
+        insert(oa);
+        System.out.println("[R4.4] Kreirano: " + oa);
+end
+
+rule "R4.5 ClassifyAsMinorInconsistencies"
+    salience 25
+    when
+        $sgc: SeriousGapCount($cId: candidateId, count == 0)
+        ( exists Gap(candidateId == $cId, type == GapType.OVERSTATED, severity == GapSeverity.MODERATE)
+          or exists Gap(candidateId == $cId, type == GapType.UNDERSTATED) )
+        not OverallAssessment(candidateId == $cId)
+    then
+        OverallAssessment oa = new OverallAssessment($cId, OverallClassification.MINOR_INCONSISTENCIES);
+        insert(oa);
+        System.out.println("[R4.5] Kreirano: " + oa);
+end
+
+rule "R4.6 ClassifyAsReliableCV"
+    salience 20
+    when
+        $sgc: SeriousGapCount($cId: candidateId, count == 0)
+        not Gap(candidateId == $cId, type == GapType.OVERSTATED, severity == GapSeverity.MODERATE)
+        not Gap(candidateId == $cId, type == GapType.UNDERSTATED)
+        not OverallAssessment(candidateId == $cId)
+    then
+        OverallAssessment oa = new OverallAssessment($cId, OverallClassification.RELIABLE_CV);
+        insert(oa);
+        System.out.println("[R4.6] Kreirano: " + oa);
+end
+
+rule "R4.7 GenerateMentorRecommendation"
+    salience 10
+    when
+        $oa: OverallAssessment($cId: candidateId, classification != OverallClassification.RELIABLE_CV)
+        $pt: ProblematicTechnologies(candidateId == $cId, $techs: techList)
+        $gaps: List() from collect(
+            Gap(candidateId == $cId, severity in (GapSeverity.MAJOR, GapSeverity.CRITICAL))
+        )
+        not MentorRecommendation(candidateId == $cId)
+    then
+        Map<String, Set<String>> conceptsToVerify = new HashMap<String, Set<String>>();
+        for (Object gObj : $gaps) {
+            Gap g = (Gap) gObj;
+            conceptsToVerify.put(g.getTechnology(), new HashSet<String>(g.getMissingConcepts()));
+        }
+        String summary = "Klasifikacija: " + $oa.getClassification() +
+                ". Predlažem dodatna pitanja iz: " + $techs;
+        MentorRecommendation mr = new MentorRecommendation($cId,
+                new ArrayList<String>($techs), conceptsToVerify, summary);
+        insert(mr);
+        System.out.println("[R4.7] Kreirano: " + mr);
+        System.out.println("       Summary: " + summary);
+        for (Map.Entry<String, Set<String>> e : conceptsToVerify.entrySet()) {
+            System.out.println("       " + e.getKey() + " - dodatno proveriti: " + e.getValue());
+        }
+end

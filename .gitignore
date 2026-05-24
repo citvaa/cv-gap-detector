@@ -1,0 +1,35 @@
+# Hidden tool/IDE directories (.idea, .mvn, .vscode, .settings, .gradle, .cache, ...)
+.*/
+
+# Maven build output
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# Java compiled / crash logs
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# IntelliJ project files
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.project
+.classpath
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local env
+*.local

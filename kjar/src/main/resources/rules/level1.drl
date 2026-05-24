@@ -1,0 +1,65 @@
+package rules;
+
+import com.ftn.sbnz.model.cv.CVTechnology;
+import com.ftn.sbnz.model.cv.ExpertiseLevel;
+import com.ftn.sbnz.model.interview.ConceptMentioned;
+import com.ftn.sbnz.model.kb.TechnologyKnowledgeProfile;
+import com.ftn.sbnz.model.kb.ExperienceLevelMapping;
+import com.ftn.sbnz.model.facts.ExpectedConcepts;
+import com.ftn.sbnz.model.facts.ExperienceBasedLevel;
+import com.ftn.sbnz.model.facts.DemonstratedConcepts;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+rule "R1.1 DetermineExpectedConcepts"
+    salience 100
+    when
+        $cv: CVTechnology($cId: candidateId, $tech: technology, $lvl: claimedLevel)
+        $profile: TechnologyKnowledgeProfile(technology == $tech, level == $lvl, $concepts: expectedConcepts)
+        not ExpectedConcepts(candidateId == $cId, technology == $tech)
+    then
+        ExpectedConcepts ec = new ExpectedConcepts($cId, $tech, $lvl, new HashSet<String>($concepts));
+        insert(ec);
+        System.out.println("[R1.1] Kreirano: " + ec);
+end
+
+rule "R1.2 DetermineExpectedLevelFromExperience"
+    salience 100
+    when
+        $cv: CVTechnology($cId: candidateId, $tech: technology, $years: yearsOfExperience)
+        $mapping: ExperienceLevelMapping(minYears <= $years, maxYears >= $years, $lvl: level)
+        not ExperienceBasedLevel(candidateId == $cId, technology == $tech)
+    then
+        ExperienceBasedLevel ebl = new ExperienceBasedLevel($cId, $tech, $lvl);
+        insert(ebl);
+        System.out.println("[R1.2] Kreirano: " + ebl);
+end
+
+rule "R1.3 CollectDemonstratedConcepts"
+    salience 90
+    when
+        $cv: CVTechnology($cId: candidateId, $tech: technology)
+        $concepts: List(size > 0) from accumulate(
+            ConceptMentioned(candidateId == $cId, technology == $tech, $c: concept),
+            collectList($c)
+        )
+        not DemonstratedConcepts(candidateId == $cId, technology == $tech)
+    then
+        DemonstratedConcepts dc = new DemonstratedConcepts($cId, $tech, $concepts);
+        insert(dc);
+        System.out.println("[R1.3] Kreirano: " + dc);
+end
+
+rule "R1.3b CollectDemonstratedConcepts_Empty"
+    salience 89
+    when
+        $cv: CVTechnology($cId: candidateId, $tech: technology)
+        not ConceptMentioned(candidateId == $cId, technology == $tech)
+        not DemonstratedConcepts(candidateId == $cId, technology == $tech)
+    then
+        DemonstratedConcepts dc = new DemonstratedConcepts($cId, $tech, new HashSet<String>());
+        insert(dc);
+        System.out.println("[R1.3b] Kreirano (prazno): " + dc);
+end

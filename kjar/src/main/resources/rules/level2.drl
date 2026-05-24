@@ -1,0 +1,82 @@
+package rules;
+
+import com.ftn.sbnz.model.cv.ExpertiseLevel;
+import com.ftn.sbnz.model.interview.ConceptMentioned;
+import com.ftn.sbnz.model.interview.QuestionScore;
+import com.ftn.sbnz.model.facts.ExpectedConcepts;
+import com.ftn.sbnz.model.facts.DemonstratedConcepts;
+import com.ftn.sbnz.model.facts.MissingConcepts;
+import com.ftn.sbnz.model.facts.BonusConcepts;
+import com.ftn.sbnz.model.facts.EstimatedLevel;
+import com.ftn.sbnz.model.facts.AverageScore;
+
+import java.util.HashSet;
+import java.util.Set;
+
+rule "R2.1 ComputeMissingConcepts"
+    salience 80
+    when
+        $expected: ExpectedConcepts($cId: candidateId, $tech: technology, $expSet: conceptList)
+        $demonstrated: DemonstratedConcepts(candidateId == $cId, technology == $tech, $demSet: conceptList)
+        not MissingConcepts(candidateId == $cId, technology == $tech)
+    then
+        Set<String> missing = new HashSet<String>($expSet);
+        missing.removeAll($demSet);
+        MissingConcepts mc = new MissingConcepts($cId, $tech, missing, $expSet.size());
+        insert(mc);
+        System.out.println("[R2.1] Kreirano: " + mc);
+end
+
+rule "R2.2 ComputeUnexpectedlyKnownConcepts"
+    salience 80
+    when
+        $expected: ExpectedConcepts($cId: candidateId, $tech: technology, $expSet: conceptList)
+        $demonstrated: DemonstratedConcepts(candidateId == $cId, technology == $tech, $demSet: conceptList)
+        not BonusConcepts(candidateId == $cId, technology == $tech)
+    then
+        Set<String> bonus = new HashSet<String>($demSet);
+        bonus.removeAll($expSet);
+        BonusConcepts bc = new BonusConcepts($cId, $tech, bonus);
+        insert(bc);
+        if (!bonus.isEmpty()) {
+            System.out.println("[R2.2] Kreirano: " + bc);
+        }
+end
+
+rule "R2.3 EstimateActualLevel"
+    salience 75
+    when
+        $dc: DemonstratedConcepts($cId: candidateId, $tech: technology)
+        $total: Number() from accumulate(
+            ConceptMentioned(candidateId == $cId, technology == $tech, $w: difficultyWeight),
+            sum($w)
+        )
+        not EstimatedLevel(candidateId == $cId, technology == $tech)
+    then
+        int score = $total.intValue();
+        ExpertiseLevel lvl;
+        if      (score >= 23) lvl = ExpertiseLevel.EXPERT;
+        else if (score >= 15) lvl = ExpertiseLevel.SENIOR;
+        else if (score >= 8)  lvl = ExpertiseLevel.MID;
+        else if (score >= 3)  lvl = ExpertiseLevel.JUNIOR;
+        else                  lvl = ExpertiseLevel.BEGINNER;
+
+        EstimatedLevel el = new EstimatedLevel($cId, $tech, lvl, score);
+        insert(el);
+        System.out.println("[R2.3] Kreirano: " + el);
+end
+
+rule "R2.4 ComputeAverageQuestionScore"
+    salience 75
+    when
+        $dc: DemonstratedConcepts($cId: candidateId, $tech: technology)
+        $avg: Number() from accumulate(
+            QuestionScore(candidateId == $cId, technology == $tech, $s: score),
+            average($s)
+        )
+        not AverageScore(candidateId == $cId, technology == $tech)
+    then
+        AverageScore as = new AverageScore($cId, $tech, $avg.doubleValue());
+        insert(as);
+        System.out.println("[R2.4] Kreirano: " + as);
+end

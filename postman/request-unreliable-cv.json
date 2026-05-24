@@ -1,0 +1,28 @@
+{
+  "candidateId": "candidate-unreliable",
+  "cv": [
+    { "candidateId": "candidate-unreliable", "technology": "React", "claimedLevel": "EXPERT", "yearsOfExperience": 6 },
+    { "candidateId": "candidate-unreliable", "technology": "PostgreSQL", "claimedLevel": "EXPERT", "yearsOfExperience": 7 },
+    { "candidateId": "candidate-unreliable", "technology": "Java", "claimedLevel": "EXPERT", "yearsOfExperience": 8 }
+  ],
+  "mentionedConcepts": [
+    { "candidateId": "candidate-unreliable", "technology": "React", "concept": "JSX", "difficultyWeight": 1 },
+    { "candidateId": "candidate-unreliable", "technology": "React", "concept": "components", "difficultyWeight": 1 },
+
+    { "candidateId": "candidate-unreliable", "technology": "PostgreSQL", "concept": "SELECT", "difficultyWeight": 1 },
+    { "candidateId": "candidate-unreliable", "technology": "PostgreSQL", "concept": "INSERT", "difficultyWeight": 1 },
+
+    { "candidateId": "candidate-unreliable", "technology": "Java", "concept": "classes", "difficultyWeight": 1 },
+    { "candidateId": "candidate-unreliable", "technology": "Java", "concept": "methods", "difficultyWeight": 1 }
+  ],
+  "questionScores": [
+    { "candidateId": "candidate-unreliable", "technology": "React", "questionId": "q1", "score": 25 },
+    { "candidateId": "candidate-unreliable", "technology": "React", "questionId": "q2", "score": 30 },
+
+    { "candidateId": "candidate-unreliable", "technology": "PostgreSQL", "questionId": "q1", "score": 20 },
+    { "candidateId": "candidate-unreliable", "technology": "PostgreSQL", "questionId": "q2", "score": 35 },
+
+    { "candidateId": "candidate-unreliable", "technology": "Java", "questionId": "q1", "score": 30 },
+    { "candidateId": "candidate-unreliable", "technology": "Java", "questionId": "q2", "score": 25 }
+  ]
+}

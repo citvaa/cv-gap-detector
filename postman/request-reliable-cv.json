@@ -1,0 +1,25 @@
+{
+  "candidateId": "candidate-reliable",
+  "cv": [
+    {
+      "candidateId": "candidate-reliable",
+      "technology": "React",
+      "claimedLevel": "MID",
+      "yearsOfExperience": 3
+    }
+  ],
+  "mentionedConcepts": [
+    { "candidateId": "candidate-reliable", "technology": "React", "concept": "JSX", "difficultyWeight": 1 },
+    { "candidateId": "candidate-reliable", "technology": "React", "concept": "components", "difficultyWeight": 1 },
+    { "candidateId": "candidate-reliable", "technology": "React", "concept": "props", "difficultyWeight": 1 },
+    { "candidateId": "candidate-reliable", "technology": "React", "concept": "useState", "difficultyWeight": 2 },
+    { "candidateId": "candidate-reliable", "technology": "React", "concept": "useEffect", "difficultyWeight": 2 },
+    { "candidateId": "candidate-reliable", "technology": "React", "concept": "events", "difficultyWeight": 2 },
+    { "candidateId": "candidate-reliable", "technology": "React", "concept": "lifecycle", "difficultyWeight": 2 }
+  ],
+  "questionScores": [
+    { "candidateId": "candidate-reliable", "technology": "React", "questionId": "q1", "score": 80 },
+    { "candidateId": "candidate-reliable", "technology": "React", "questionId": "q2", "score": 85 },
+    { "candidateId": "candidate-reliable", "technology": "React", "questionId": "q3", "score": 75 }
+  ]
+}

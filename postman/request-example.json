@@ -1,0 +1,42 @@
+{
+  "candidateId": "candidate-001",
+  "cv": [
+    {
+      "candidateId": "candidate-001",
+      "technology": "React",
+      "claimedLevel": "EXPERT",
+      "yearsOfExperience": 5
+    },
+    {
+      "candidateId": "candidate-001",
+      "technology": "PostgreSQL",
+      "claimedLevel": "MID",
+      "yearsOfExperience": 2
+    }
+  ],
+  "mentionedConcepts": [
+    { "candidateId": "candidate-001", "technology": "React", "concept": "JSX", "difficultyWeight": 1 },
+    { "candidateId": "candidate-001", "technology": "React", "concept": "useState", "difficultyWeight": 2 },
+    { "candidateId": "candidate-001", "technology": "React", "concept": "props", "difficultyWeight": 1 },
+    { "candidateId": "candidate-001", "technology": "React", "concept": "components", "difficultyWeight": 1 },
+
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "SELECT", "difficultyWeight": 1 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "JOIN", "difficultyWeight": 2 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "WHERE", "difficultyWeight": 1 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "GROUP BY", "difficultyWeight": 2 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "INDEX", "difficultyWeight": 3 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "subqueries", "difficultyWeight": 3 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "EXPLAIN", "difficultyWeight": 4 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "transactions", "difficultyWeight": 4 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "concept": "ACID", "difficultyWeight": 4 }
+  ],
+  "questionScores": [
+    { "candidateId": "candidate-001", "technology": "React", "questionId": "q1", "score": 40 },
+    { "candidateId": "candidate-001", "technology": "React", "questionId": "q2", "score": 30 },
+    { "candidateId": "candidate-001", "technology": "React", "questionId": "q3", "score": 35 },
+
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "questionId": "q1", "score": 85 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "questionId": "q2", "score": 80 },
+    { "candidateId": "candidate-001", "technology": "PostgreSQL", "questionId": "q3", "score": 90 }
+  ]
+}
