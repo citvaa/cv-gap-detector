@@ -1,18 +1,12 @@
 import type { AnalysisRequest } from '../types/api'
 
-// Gotovi primeri za demonstraciju, identicni JSON fajlovima iz postman/ foldera.
-// Backend /api/demo vraca vec ANALIZIRAN rezultat (AnalysisResponse), a ne ulaz,
-// pa "Ucitaj primer" puni formu ovim hardkodiranim ulaznim podacima.
-
 export interface Preset {
   key: string
   label: string
-  // Kratak opis ocekivanog ishoda, korisno za odbranu.
   expected: string
   request: AnalysisRequest
 }
 
-// 1) postman/request-example.json -> candidate-001 (SIGNIFICANT_GAPS)
 const EXAMPLE: AnalysisRequest = {
   candidateId: 'candidate-001',
   cv: [
@@ -44,7 +38,6 @@ const EXAMPLE: AnalysisRequest = {
   ],
 }
 
-// 2) postman/request-reliable-cv.json -> candidate-reliable (RELIABLE_CV)
 const RELIABLE: AnalysisRequest = {
   candidateId: 'candidate-reliable',
   cv: [
@@ -66,7 +59,6 @@ const RELIABLE: AnalysisRequest = {
   ],
 }
 
-// 3) postman/request-unreliable-cv.json -> candidate-unreliable (UNRELIABLE_CV)
 const UNRELIABLE: AnalysisRequest = {
   candidateId: 'candidate-unreliable',
   cv: [
@@ -113,7 +105,6 @@ export const PRESETS: Preset[] = [
   },
 ]
 
-// Deep-copy da forma ne mutira konstantu.
 export function clonePreset(key: string): AnalysisRequest {
   const preset = PRESETS.find((p) => p.key === key)
   const base = preset ? preset.request : EXAMPLE

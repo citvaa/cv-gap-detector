@@ -1,7 +1,6 @@
 import type { ExpertiseLevel } from '../types/api'
 import { EXPERTISE_LEVELS, LEVEL_RANK } from '../types/api'
 
-// Vizuelno poredjenje claimed vs estimated nivoa (dve "lestvice" jedna pored druge).
 function LevelBar({
   label,
   level,

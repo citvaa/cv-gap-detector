@@ -9,8 +9,6 @@ import {
 export default function KnowledgeBasePage() {
   const [copied, setCopied] = useState(false)
 
-  // Generise JSON pregled cele baze, cisto kao pomoc developeru
-  // (NE ide ka backendu; baza je hardkodirana u KnowledgeBaseSeeder.java).
   const json = useMemo(() => JSON.stringify(KNOWLEDGE_BASE, null, 2), [])
 
   const copyJson = async () => {
@@ -33,7 +31,6 @@ export default function KnowledgeBasePage() {
         samo read-only ogledalo te konfiguracije. Izmene ovde ne uticu na backend.
       </div>
 
-      {/* Mapiranje iskustvo -> nivo */}
       <section className="bg-white rounded-lg border border-slate-200 p-4">
         <h2 className="font-semibold text-slate-800 mb-2">
           Mapiranje godina iskustva u nivo
@@ -51,7 +48,6 @@ export default function KnowledgeBasePage() {
         </div>
       </section>
 
-      {/* Profili po tehnologiji */}
       {SUPPORTED_TECHNOLOGIES.map((tech) => (
         <section
           key={tech}
@@ -83,7 +79,6 @@ export default function KnowledgeBasePage() {
         </section>
       ))}
 
-      {/* JSON helper za developera */}
       <section className="bg-white rounded-lg border border-slate-200 p-4 space-y-2">
         <div className="flex items-center">
           <h2 className="font-semibold text-slate-800">

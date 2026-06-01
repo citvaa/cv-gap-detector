@@ -36,7 +36,6 @@ export default function AnalyzePage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Tehnologije koje stvarno postoje u CV-u (trimovane, bez praznih).
   const cvTechs = useMemo(
     () =>
       Array.from(
@@ -49,8 +48,6 @@ export default function AnalyzePage() {
     [req.cv],
   )
 
-  // Pravilo iz zadatka: ne dozvoli koncepte/pitanja za tehnologiju koja nije u CV-u.
-  // Cim se CV tehnologije promene, uklanjamo "siroce" iz koncepata i pitanja.
   useEffect(() => {
     setReq((prev) => {
       const techSet = new Set(
@@ -70,7 +67,6 @@ export default function AnalyzePage() {
     })
   }, [req.cv])
 
-  // ---- CV manipulacija ----
   const addCv = () => setReq((p) => ({ ...p, cv: [...p.cv, newCvRow()] }))
   const removeCv = (idx: number) =>
     setReq((p) => ({ ...p, cv: p.cv.filter((_, i) => i !== idx) }))
@@ -80,7 +76,6 @@ export default function AnalyzePage() {
       cv: p.cv.map((c, i) => (i === idx ? { ...c, ...patch } : c)),
     }))
 
-  // ---- Koncepti ----
   const addConcept = (tech: string) =>
     setReq((p) => ({
       ...p,
@@ -102,7 +97,6 @@ export default function AnalyzePage() {
       mentionedConcepts: p.mentionedConcepts.filter((_, i) => i !== globalIdx),
     }))
 
-  // ---- Pitanja ----
   const addScore = (tech: string) =>
     setReq((p) => ({
       ...p,
@@ -145,7 +139,6 @@ export default function AnalyzePage() {
       setError('Dodaj bar jednu tehnologiju u CV.')
       return
     }
-    // Propagiraj candidateId na sve ugnjezdene objekte (backend ih ocekuje).
     const payload: AnalysisRequest = {
       candidateId,
       cv: req.cv.map((c) => ({
@@ -194,7 +187,6 @@ export default function AnalyzePage() {
         </button>
       </div>
 
-      {/* Gotovi primeri za demonstraciju (iz postman/ foldera) */}
       <section className="bg-white rounded-lg border border-slate-200 p-4 space-y-2">
         <div className="text-sm font-medium text-slate-700">Ucitaj primer:</div>
         <div className="flex flex-wrap gap-2">
@@ -219,7 +211,6 @@ export default function AnalyzePage() {
         </div>
       )}
 
-      {/* candidateId */}
       <section className="bg-white rounded-lg border border-slate-200 p-4">
         <label className="block text-sm font-medium text-slate-700 mb-1">
           candidateId
@@ -233,7 +224,6 @@ export default function AnalyzePage() {
         />
       </section>
 
-      {/* CV */}
       <section className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
         <div className="flex items-center">
           <h2 className="font-semibold text-slate-800">CV - navedene tehnologije</h2>
@@ -306,7 +296,6 @@ export default function AnalyzePage() {
         </div>
       </section>
 
-      {/* Mentioned concepts - grupisano po CV tehnologiji */}
       <section className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
         <h2 className="font-semibold text-slate-800">
           Spomenuti koncepti (po tehnologiji iz CV-a)
@@ -376,7 +365,6 @@ export default function AnalyzePage() {
         )}
       </section>
 
-      {/* Question scores - grupisano po CV tehnologiji */}
       <section className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
         <h2 className="font-semibold text-slate-800">
           Rezultati pitanja (po tehnologiji iz CV-a)

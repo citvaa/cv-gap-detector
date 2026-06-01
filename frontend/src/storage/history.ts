@@ -1,13 +1,10 @@
 import type { AnalysisRequest, AnalysisResponse, OverallClassification } from '../types/api'
 
-// Istorija analiza se cuva iskljucivo u localStorage (bez backend storage-a).
-
 const STORAGE_KEY = 'cv-gap-detector.history'
 
 export interface HistoryEntry {
   id: string
   candidateId: string
-  // ISO datum analize
   analyzedAt: string
   classification: OverallClassification | null
   request: AnalysisRequest
@@ -30,12 +27,10 @@ function writeAll(entries: HistoryEntry[]): void {
 }
 
 function generateId(): string {
-  // Dovoljno jedinstveno za lokalnu istoriju.
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
 export function getHistory(): HistoryEntry[] {
-  // Najnovije prvo.
   return readAll().sort((a, b) => b.analyzedAt.localeCompare(a.analyzedAt))
 }
 

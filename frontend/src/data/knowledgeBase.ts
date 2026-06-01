@@ -1,15 +1,9 @@
 import type { ExpertiseLevel } from '../types/api'
 
-// Read-only ogledalo baze znanja iz backenda
-// (service/.../service/KnowledgeBaseSeeder.java).
-// VAZNO: baza znanja je hardkodirana u backendu - ovo je samo prikaz.
-// Ako se seeder promeni, treba rucno azurirati i ovaj fajl.
-
 export const SUPPORTED_TECHNOLOGIES = ['React', 'PostgreSQL', 'Java'] as const
 
 export type SupportedTechnology = (typeof SUPPORTED_TECHNOLOGIES)[number]
 
-// Za svaku tehnologiju, ocekivani koncepti po nivou (kao u seeder-u).
 export const KNOWLEDGE_BASE: Record<
   SupportedTechnology,
   Record<ExpertiseLevel, string[]>
@@ -61,7 +55,6 @@ export const KNOWLEDGE_BASE: Record<
   },
 }
 
-// Mapiranje godina iskustva -> nivo (ExperienceLevelMapping iz seeder-a).
 export const EXPERIENCE_MAPPING = [
   { min: 0, max: 0, level: 'BEGINNER' as ExpertiseLevel },
   { min: 1, max: 1, level: 'JUNIOR' as ExpertiseLevel },
@@ -70,8 +63,6 @@ export const EXPERIENCE_MAPPING = [
   { min: 7, max: 100, level: 'EXPERT' as ExpertiseLevel },
 ]
 
-// Svi poznati koncepti za jednu tehnologiju (unija svih nivoa) - korisno za
-// autocomplete/predlog u formi koncepata.
 export function conceptsForTechnology(tech: string): string[] {
   const profile = (KNOWLEDGE_BASE as Record<string, Record<ExpertiseLevel, string[]>>)[tech]
   if (!profile) return []

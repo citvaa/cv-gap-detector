@@ -5,7 +5,6 @@ import ResultsView from '../components/ResultsView'
 
 export default function ResultsPage() {
   const { id } = useParams<{ id: string }>()
-  // Rerender iskljucivo iz localStorage, bez novog API poziva.
   const entry = useMemo(() => (id ? getEntry(id) : undefined), [id])
 
   if (!entry) {

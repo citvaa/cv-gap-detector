@@ -1,6 +1,3 @@
-// TypeScript tipovi koji 1:1 odgovaraju backend DTO-ovima
-// (service/.../dto/AnalysisRequest.java, AnalysisResponse.java i model/.../facts/*).
-
 export type ExpertiseLevel =
   | 'BEGINNER'
   | 'JUNIOR'
@@ -16,7 +13,6 @@ export const EXPERTISE_LEVELS: ExpertiseLevel[] = [
   'EXPERT',
 ]
 
-// rank kao u model/cv/ExpertiseLevel.java (1..5) - koristi se za vizuelno poredjenje
 export const LEVEL_RANK: Record<ExpertiseLevel, number> = {
   BEGINNER: 1,
   JUNIOR: 2,
@@ -35,8 +31,6 @@ export type OverallClassification =
   | 'SIGNIFICANT_GAPS'
   | 'UNRELIABLE_CV'
 
-// ---- Request strane (AnalysisRequest) ----
-
 export interface CVTechnology {
   candidateId: string
   technology: string
@@ -48,14 +42,14 @@ export interface ConceptMentioned {
   candidateId: string
   technology: string
   concept: string
-  difficultyWeight: number // 1-5
+  difficultyWeight: number
 }
 
 export interface QuestionScore {
   candidateId: string
   technology: string
   questionId: string
-  score: number // 0-100
+  score: number
 }
 
 export interface AnalysisRequest {
@@ -65,8 +59,6 @@ export interface AnalysisRequest {
   questionScores: QuestionScore[]
 }
 
-// ---- Response strane (AnalysisResponse) ----
-
 export interface Gap {
   candidateId: string
   technology: string
@@ -74,7 +66,6 @@ export interface Gap {
   severity: GapSeverity
   claimedLevel: ExpertiseLevel | null
   estimatedLevel: ExpertiseLevel | null
-  // Backend ih serijalizuje kao Set<String> -> JSON niz
   missingConcepts: string[]
   bonusConcepts: string[]
 }
@@ -87,7 +78,6 @@ export interface OverallAssessment {
 export interface MentorRecommendation {
   candidateId: string
   problematicTechnologies: string[]
-  // Map<String, Set<String>> -> objekat tech -> niz koncepata
   conceptsToVerify: Record<string, string[]>
   summary: string
 }

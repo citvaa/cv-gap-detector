@@ -83,7 +83,6 @@ export default function ResultsView({
 
   return (
     <div className="space-y-6">
-      {/* Sumarna kartica */}
       <div
         className={`rounded-lg border p-5 ${cstyle?.card ?? 'bg-white border-slate-200'}`}
       >
@@ -111,7 +110,6 @@ export default function ResultsView({
         )}
       </div>
 
-      {/* Gap kartice */}
       <div>
         <h2 className="font-semibold text-slate-800 mb-2">
           Gap analiza ({response.gaps.length})
@@ -127,7 +125,6 @@ export default function ResultsView({
         )}
       </div>
 
-      {/* Mentor recommendation */}
       {mentor && (
         <div className="bg-white rounded-lg border border-slate-200 p-5 space-y-3">
           <h2 className="font-semibold text-slate-800">

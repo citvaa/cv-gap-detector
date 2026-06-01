@@ -1,7 +1,5 @@
 import type { GapSeverity, GapType, OverallClassification } from '../types/api'
 
-// Centralizovane Tailwind klase za boje prema zahtevima iz zadatka.
-
 export const CLASSIFICATION_STYLE: Record<
   OverallClassification,
   { label: string; card: string; text: string; chip: string }

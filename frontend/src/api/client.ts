@@ -1,8 +1,5 @@
 import type { AnalysisRequest, AnalysisResponse } from '../types/api'
 
-// Sve ide kroz /api koji Vite proxy preusmerava na http://localhost:8080
-// (vidi vite.config.ts).
-
 export async function analyze(request: AnalysisRequest): Promise<AnalysisResponse> {
   const res = await fetch('/api/analyze', {
     method: 'POST',
@@ -18,7 +15,6 @@ export async function analyze(request: AnalysisRequest): Promise<AnalysisRespons
   return (await res.json()) as AnalysisResponse
 }
 
-// Pomocni poziv - nije neophodan, ali korisno za "health check" demo endpoint-a.
 export async function fetchDemoResult(): Promise<AnalysisResponse> {
   const res = await fetch('/api/demo')
   if (!res.ok) {
